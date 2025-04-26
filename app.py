@@ -14,8 +14,8 @@ app = Flask(__name__)
 
 # Permitir solo el dominio de tu frontend de Amplify
 CORS(app, resources={
-    r"/usuarios/*": {"origins": "http://localhost:3000"},
-    r"/productos/*": {"origins": "http://localhost:3000"}
+    r"/usuarios/*": {"origins": "https://main.d2vpy1q92z41yt.amplifyapp.com"},
+    r"/productos/*": {"origins": "https://main.d2vpy1q92z41yt.amplifyapp.com"}
 }, supports_credentials=True)
 
 # Configuración de JWT y base de datos
