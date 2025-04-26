@@ -2,13 +2,13 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import create_access_token
 from controllers.controllers import (
-    create_usuario,
-    create_producto,
-    create_categoria,
+    create_usuario, delete_producto,
+    create_producto,edit_usuario, 
+    create_categoria, edit_producto,
     buscar_productos_por_categoria,
-    buscar_productos_por_nombre
+    buscar_productos_por_nombre, delete_usuario
 )
-from models.models import Usuario, Producto, Categoria
+from models.models import Usuario, Producto, Categoria, db
 
 # Blueprints
 usuario_bp = Blueprint('usuarios', __name__)
@@ -309,3 +309,46 @@ def get_productos():
     except Exception as e:
         print(f"ERROR {e}")
         return jsonify({'msg': 'Error al obtener productos'}), 500
+    
+@usuario_bp.route('/usuarios/<int:usuario_id>', methods=['PUT'])
+def actualizar_usuario(usuario_id):
+    data = request.get_json()
+    nombre = data.get('nombre')
+    email = data.get('email')
+    password = data.get('password')
+    return edit_usuario(usuario_id, nombre, email, password)
+
+@usuario_bp.route('/usuarios/<int:usuario_id>', methods=['DELETE'])
+def eliminar_usuario(usuario_id):
+    return delete_usuario(usuario_id)
+
+@productos_bp.route('/productos/<int:producto_id>', methods=['PUT'])
+def actualizar_producto(producto_id):
+    try:
+        data = request.get_json()
+        print("Datos recibidos para actualizar:", data)
+
+        producto = Producto.query.get(producto_id)
+        if not producto:
+            return jsonify({"error": "El producto no existe"}), 404
+
+        producto.nombre = data.get('nombre', producto.nombre)
+        producto.precio = data.get('precio', producto.precio)
+        producto.cantidad = data.get('cantidad', producto.cantidad)
+
+        categoria_id = data.get('categoria_id', producto.categoria_id)
+        if categoria_id:
+            categoria = Categoria.query.get(categoria_id)
+            if not categoria:
+                return jsonify({"error": "La categoría especificada no existe"}), 404
+            producto.categoria_id = categoria_id
+
+        db.session.commit()
+        return jsonify(producto.to_dict()), 200
+    except Exception as e:
+        print(f"Error al actualizar el producto: {e}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+    
+@productos_bp.route('/productos/<int:producto_id>', methods=['DELETE'])
+def eliminar_producto(producto_id):
+    return delete_producto(producto_id)
